@@ -1,6 +1,7 @@
 from fastapi import APIRouter
 import json
 import copy
+import socket
 
 router = APIRouter()
 
@@ -12,7 +13,10 @@ async def broadcast_to_room(message: str, except_user, room_list):
     res = list(filter(lambda i: i['socket'] == except_user, room_list))
     for room in room_list:
         if except_user != room['socket']:
-            await room['socket'].send_text(json.dumps({'msg': message, 'userId': res[0]['client_id']}))
+            try:
+                await room['socket'].send_text(json.dumps({'msg': message, 'userId': res[0]['client_id']}))
+            except RuntimeError as e:
+                print(f"Failed to send message: {e}")
 
 def remove_room(except_room, room_list):
     new_room_list = copy(room_list)
